@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>gantt</title>
+  <meta name="description" content="A Gantt chart in plain TypeScript: tasks in a tree, drag to move and stretch, links that push later work along, the critical path, and undo. No dependencies.">
+  <meta name="theme-color" content="#f5f4f0">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../gantt.css">
+  <link rel="stylesheet" href="demo.css">
+  <script type="module" src="demo.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="bar">
+      <span class="brand" translate="no">gantt</span>
+      <a class="icon-link" href="https://github.com/drkxbt/gantt" aria-label="gantt on GitHub" title="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 19.5c-4 1.2-4-2-5.5-2.5m11 4.5v-3.4c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.2 5.4 3.2a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.6c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2v3.9"/></svg>
+      </a>
+    </header>
+
+    <section class="intro">
+      <h1>A Gantt chart, with no dependencies</h1>
+      <p class="lede">Tasks sit in a tree next to a timeline you can drag. Move a task or stretch it, pull its progress along, or draw a link from one task to the next, and everything that waits on it moves too. Turn on the critical path to see which tasks decide the end date, and undo anything. Free and MIT licensed, for work that usually comes with a per-developer licence.</p>
+      <div class="install"><code>npm install github:drkxbt/gantt</code></div>
+    </section>
+
+    <section class="work" aria-labelledby="sample-title">
+      <div class="work-head">
+        <div>
+          <h2 id="sample-title">Sample plan: shipping a small library</h2>
+          <p class="note">Made up for the demo. Its dates are set from today's, so the today line always falls inside it.</p>
+        </div>
+        <button class="icon-link" type="button" data-reset aria-label="Start the sample plan over" title="Start over">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4.5H8"/></svg>
+        </button>
+      </div>
+      <div class="frame" data-gantt></div>
+    </section>
+
+    <section class="data" aria-labelledby="data-title">
+      <h2 id="data-title">The plan as data</h2>
+      <p class="note">What <code>chart.plan</code> holds right now. It changes as you edit, and it is what <code>onChange</code> hands you to save.</p>
+      <pre class="json" tabindex="0" aria-labelledby="data-title" data-json></pre>
+    </section>
+
+    <footer class="foot">
+      <p>MIT licensed. Built by drk.</p>
+      <p>The plan shown is a sample, not a real project.</p>
+    </footer>
+  </main>
+</body>
+</html>

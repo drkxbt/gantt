@@ -1,0 +1,48 @@
+{
+  "name": "@drkxbt/gantt",
+  "version": "0.1.0",
+  "description": "A Gantt chart in plain TypeScript: tasks in a tree, drag to move and stretch, links that push later work along, the critical path, and undo. No dependencies.",
+  "license": "MIT",
+  "author": "drk",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./gantt.css": "./gantt.css"
+  },
+  "files": [
+    "dist",
+    "gantt.css"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test \"test/*.test.js\"",
+    "demo": "tsc -p tsconfig.json && node demo/serve.js"
+  },
+  "devDependencies": {
+    "typescript": ">=5.4"
+  },
+  "keywords": [
+    "gantt",
+    "gantt-chart",
+    "project-management",
+    "schedule",
+    "timeline",
+    "critical-path",
+    "bryntum-alternative",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drkxbt/gantt.git"
+  },
+  "homepage": "https://github.com/drkxbt/gantt#readme"
+}

@@ -1,0 +1,550 @@
+/* gantt. Every colour and size the chart uses is a custom property on .gt, so a page can restyle it from outside. */
+
+.gt {
+  --gt-bg: #ffffff;
+  --gt-head: #fbfaf7;
+  --gt-text: #17171a;
+  --gt-muted: #6b6a66;
+  --gt-faint: #a09f9a;
+  --gt-line: rgb(23 23 26 / 0.08);
+  --gt-line-soft: rgb(23 23 26 / 0.045);
+  --gt-weekend: rgb(23 23 26 / 0.03);
+  --gt-hover: rgb(23 23 26 / 0.045);
+  --gt-select: rgb(47 240 184 / 0.15);
+  --gt-accent: #2ff0b8;
+  --gt-accent-ink: #04392a;
+  --gt-bar: #e9e7e0;
+  --gt-bar-edge: rgb(23 23 26 / 0.1);
+  --gt-progress: #2ff0b8;
+  --gt-summary: #17171a;
+  --gt-critical: #ff5a4e;
+  --gt-critical-bar: #ffe4e0;
+  --gt-critical-ink: #c72e22;
+  --gt-link: #a3a19b;
+  --gt-today: #17171a;
+  --gt-radius: 10px;
+  --gt-bar-radius: 6px;
+  --gt-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  container-type: inline-size;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 240px;
+  overflow: hidden;
+  border: 1px solid var(--gt-line);
+  border-radius: var(--gt-radius);
+  background: var(--gt-bg);
+  color: var(--gt-text);
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.gt svg .fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Tools */
+
+.gt-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--gt-line);
+  scrollbar-width: none;
+}
+.gt-tools::-webkit-scrollbar { display: none; }
+.gt-tools[data-more-end] { mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+.gt-tools[data-more-start] { mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); }
+.gt-tools[data-more-start][data-more-end] { mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
+
+.gt-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gt-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms var(--gt-ease);
+}
+.gt-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (hover: hover) {
+  .gt-btn:not(:disabled):hover { background: var(--gt-hover); color: var(--gt-text); }
+}
+.gt-btn:not(:disabled):active { transform: scale(0.96); }
+.gt-btn:disabled { opacity: 0.32; cursor: default; }
+.gt-btn:focus-visible { outline: 2px solid var(--gt-text); outline-offset: -2px; }
+.gt-btn[aria-pressed="true"] { background: var(--gt-hover); color: var(--gt-text); }
+.gt-btn-critical[aria-pressed="true"] { background: rgb(255 90 78 / 0.12); color: var(--gt-critical-ink); }
+.gt-sep { flex: none; width: 1px; height: 20px; margin: 0 5px; background: var(--gt-line); }
+.gt-grow { flex: 1 0 8px; }
+
+/* One scroller holds the list and the timeline, so the two always scroll together. The list stays at the left and
+   the dates stay on top, both above the bars and links scrolling under them. The heading height, 56px, is also
+   fixed in gantt.ts. */
+
+.gt-scroll {
+  --gt-row: 40px;
+  --gt-list: 320px;
+  --gt-cols: minmax(0, 1fr) 72px 54px;
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(23 23 26 / 0.2) transparent;
+}
+.gt-canvas { display: grid; min-height: 100%; }
+
+.gt-list {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-sizing: border-box;
+  border-right: 1px solid var(--gt-line);
+  background: var(--gt-bg);
+}
+.gt[data-list="hidden"] .gt-list { display: none; }
+
+.gt-list-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: var(--gt-cols);
+  align-items: end;
+  box-sizing: border-box;
+  height: 56px;
+  border-bottom: 1px solid var(--gt-line);
+  background: var(--gt-head);
+  color: var(--gt-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.gt-list-head .gt-cell { padding-bottom: 9px; }
+.gt-list-head .gt-name { padding-left: 34px; }
+.gt-list-body { position: relative; flex: 1 0 auto; }
+.gt-empty { position: absolute; top: 68px; left: 0; right: 0; margin: 0; padding: 0 16px; color: var(--gt-muted); }
+.gt-empty[hidden] { display: none; }
+
+.gt-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: var(--gt-cols);
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--gt-row);
+  border-bottom: 1px solid var(--gt-line);
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .gt-row:hover { background: var(--gt-hover); }
+}
+.gt-row[aria-selected="true"] { background: var(--gt-select); }
+.gt-row:focus { outline: none; }
+.gt[data-keys] .gt-row:focus { outline: 2px solid var(--gt-text); outline-offset: -2px; }
+
+.gt-cell {
+  min-width: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gt-name { display: flex; align-items: center; gap: 2px; }
+.gt-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.gt-row[data-kind="summary"] .gt-name { font-weight: 600; }
+.gt-start,
+.gt-days {
+  padding-left: 4px;
+  color: var(--gt-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.gt-caret {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--gt-muted);
+  visibility: hidden;
+  cursor: pointer;
+}
+.gt-row[aria-expanded] .gt-caret { visibility: visible; }
+@media (hover: hover) {
+  .gt-caret:hover { background: var(--gt-hover); color: var(--gt-text); }
+}
+.gt-caret svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: rotate 160ms var(--gt-ease);
+}
+.gt-row[aria-expanded="true"] .gt-caret svg { rotate: 90deg; }
+
+.gt-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--gt-bg);
+  box-shadow: inset 0 0 0 1.5px var(--gt-text);
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+}
+/* A date needs more room than its column; while it is edited it spills over the name to its left. */
+.gt-cell:has(> .gt-input) { position: relative; overflow: visible; }
+.gt-start > .gt-input,
+.gt-days > .gt-input {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  z-index: 1;
+  translate: 0 -50%;
+  text-align: right;
+}
+.gt-start > .gt-input { width: 150px; }
+.gt-days > .gt-input { width: 64px; }
+
+.gt-sr,
+.gt-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The timeline */
+
+.gt-timeline { position: relative; grid-column: 2; display: flex; flex-direction: column; min-width: 0; }
+
+.gt-scale {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex: none;
+  box-sizing: border-box;
+  height: 56px;
+  border-bottom: 1px solid var(--gt-line);
+  background: var(--gt-head);
+  color: var(--gt-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.gt-tier { position: relative; height: 27.5px; }
+.gt-unit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border-left: 1px solid var(--gt-line-soft);
+}
+.gt-tier:first-child .gt-unit { border-left-color: var(--gt-line); }
+/* Month and year names stay in view while their stretch of the timeline is on screen. */
+.gt-unit-label {
+  position: sticky;
+  left: var(--gt-list-now, 0px);
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.gt-tier:first-child .gt-unit-label { color: var(--gt-text); font-weight: 550; }
+.gt-tier[data-unit="day"] .gt-unit { justify-content: center; }
+.gt-tier[data-unit="day"] .gt-unit-label { position: static; padding: 0; }
+.gt-unit[data-weekend] { color: var(--gt-faint); }
+.gt-unit[data-today] .gt-unit-label {
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: var(--gt-today);
+  color: var(--gt-bg);
+  font-weight: 600;
+}
+.gt-now {
+  position: absolute;
+  bottom: 0;
+  width: 10px;
+  height: 5px;
+  translate: -50% 0;
+  background: var(--gt-today);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.gt-chart {
+  position: relative;
+  flex: 1 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.gt-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--gt-row);
+  background: var(--gt-select);
+  pointer-events: none;
+}
+.gt-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 0;
+  margin-left: -0.75px;
+  border-left: 1.5px solid var(--gt-today);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.gt-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+.gt-link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.gt-link-line { fill: none; stroke: var(--gt-link); stroke-width: 1.5; }
+.gt-link-head { fill: var(--gt-link); }
+@media (hover: hover) {
+  .gt-link:hover .gt-link-line { stroke: var(--gt-text); }
+  .gt-link:hover .gt-link-head { fill: var(--gt-text); }
+}
+.gt[data-critical] .gt-link[data-critical] .gt-link-line { stroke: var(--gt-critical); }
+.gt[data-critical] .gt-link[data-critical] .gt-link-head { fill: var(--gt-critical); }
+.gt-link[data-selected] .gt-link-line { stroke: var(--gt-text); stroke-width: 2.25; }
+.gt-link[data-selected] .gt-link-head { fill: var(--gt-text); }
+.gt-draft { fill: none; stroke: var(--gt-text); stroke-width: 1.5; stroke-dasharray: 4 4; stroke-linecap: round; }
+.gt-draft[data-state="bad"] { stroke: var(--gt-critical); }
+
+.gt-bars { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+/* A bar's box is the whole row high, so it is easy to grab; the bar itself is drawn in the middle of it. Up and
+   down on a bar still scrolls on a touchscreen, since bars only ever move sideways. */
+.gt-task {
+  position: absolute;
+  height: var(--gt-row);
+  pointer-events: auto;
+  touch-action: pan-y;
+  cursor: grab;
+}
+.gt-shape {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 22px;
+  overflow: hidden;
+  translate: 0 -50%;
+  border-radius: var(--gt-bar-radius);
+  background: var(--gt-bar);
+  box-shadow: inset 0 0 0 1px var(--gt-bar-edge);
+}
+.gt-fill { height: 100%; background: var(--gt-progress); }
+.gt[data-critical] .gt-task[data-critical] .gt-shape {
+  background: var(--gt-critical-bar);
+  box-shadow: inset 0 0 0 1px rgb(255 90 78 / 0.35);
+}
+.gt[data-critical] .gt-task[data-critical] .gt-fill { background: var(--gt-critical); }
+
+.gt-task[data-kind="summary"] .gt-shape { height: 9px; border-radius: 2px; background: var(--gt-summary); box-shadow: none; }
+.gt-task[data-kind="summary"] .gt-fill { background: var(--gt-accent); }
+.gt-task[data-kind="summary"]::before,
+.gt-task[data-kind="summary"]::after {
+  content: "";
+  position: absolute;
+  top: calc(50% + 4px);
+  width: 7px;
+  height: 6px;
+  background: var(--gt-summary);
+}
+.gt-task[data-kind="summary"]::before { left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
+.gt-task[data-kind="summary"]::after { right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+
+.gt-task[data-kind="milestone"] .gt-shape {
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  translate: -50% -50%;
+  rotate: 45deg;
+  border-radius: 3px;
+  background: var(--gt-summary);
+  box-shadow: none;
+}
+.gt-task[data-kind="milestone"] .gt-fill { display: none; }
+.gt[data-critical] .gt-task[data-kind="milestone"][data-critical] .gt-shape { background: var(--gt-critical); box-shadow: none; }
+
+.gt-task[data-selected] .gt-shape { box-shadow: inset 0 0 0 1px var(--gt-bar-edge), 0 0 0 2px var(--gt-bg), 0 0 0 3.5px var(--gt-text); }
+.gt-task[data-active] .gt-shape { box-shadow: inset 0 0 0 1px var(--gt-bar-edge), 0 0 0 2px var(--gt-bg), 0 0 0 3.5px var(--gt-text), 0 8px 18px -8px rgb(0 0 0 / 0.4); }
+.gt-task[data-target] .gt-shape { box-shadow: inset 0 0 0 1px var(--gt-bar-edge), 0 0 0 2px var(--gt-bg), 0 0 0 3.5px var(--gt-accent-ink); }
+.gt-task[data-target="bad"] .gt-shape { box-shadow: inset 0 0 0 1px var(--gt-bar-edge), 0 0 0 2px var(--gt-bg), 0 0 0 3.5px var(--gt-critical); }
+
+.gt-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 26px);
+  translate: 0 -50%;
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 12.5px;
+}
+.gt-task[data-kind="summary"] .gt-label { font-weight: 600; }
+.gt-task[data-kind="milestone"] .gt-label { left: calc(100% + 16px); }
+
+/* Handles show on hover, and on the selected bar where there is no hover. They stay hidden, not just clear, the rest
+   of the time, so the empty space around a bar never catches a drag. */
+.gt-grip,
+.gt-knob,
+.gt-dot { position: absolute; visibility: hidden; touch-action: none; }
+@media (hover: hover) {
+  .gt:not([data-dragging]) .gt-task:hover :is(.gt-grip, .gt-knob, .gt-dot) { visibility: visible; }
+}
+.gt-task[data-selected] :is(.gt-grip, .gt-knob, .gt-dot),
+.gt[data-dragging] .gt-task[data-active] :is(.gt-grip, .gt-knob) { visibility: visible; }
+.gt-task:not([data-kind="task"]) :is(.gt-grip, .gt-knob),
+.gt-task[data-short] .gt-grip[data-part="start"] { display: none; }
+
+.gt-grip { top: 50%; width: 10px; height: 22px; translate: 0 -50%; cursor: ew-resize; }
+.gt-grip[data-part="start"] { left: 0; }
+.gt-grip[data-part="end"] { right: 0; }
+.gt-grip::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--gt-text);
+  opacity: 0.45;
+}
+
+.gt-knob { top: calc(50% + 5px); width: 20px; height: 16px; translate: -50% 0; cursor: ew-resize; }
+.gt-knob::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  right: 5px;
+  height: 8px;
+  background: var(--gt-text);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.gt-dot {
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--gt-bg);
+  box-shadow: inset 0 0 0 1.5px var(--gt-text);
+  cursor: crosshair;
+  transition: scale 120ms var(--gt-ease), background-color 120ms ease;
+}
+.gt-dot::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
+.gt-dot[data-part="link-start"] { left: -14px; }
+.gt-dot[data-part="link-end"] { left: calc(100% + 14px); }
+.gt-task[data-kind="milestone"] .gt-dot[data-part="link-start"] { left: -4px; }
+.gt-task[data-kind="milestone"] .gt-dot[data-part="link-end"] { left: calc(100% + 4px); }
+@media (hover: hover) {
+  .gt-dot:hover { background: var(--gt-accent); scale: 1.2; }
+}
+
+.gt-tip {
+  position: absolute;
+  z-index: 4;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--gt-text);
+  color: var(--gt-bg);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.gt-tip[data-side="end"] { translate: -100% 0; }
+.gt-tip[hidden] { display: none; }
+
+.gt[data-dragging="move"] * { cursor: grabbing; }
+.gt:is([data-dragging="start"], [data-dragging="end"], [data-dragging="progress"]) * { cursor: ew-resize; }
+.gt[data-dragging^="link"] * { cursor: crosshair; }
+
+/* Narrow: the list keeps only names, and rows get taller for fingers. */
+@container (max-width: 640px) {
+  .gt-scroll { --gt-row: 44px; --gt-list: 150px; --gt-cols: minmax(0, 1fr); }
+  .gt-list :is(.gt-start, .gt-days) { display: none; }
+}
+
+@media (pointer: coarse) {
+  .gt-btn { width: 40px; height: 40px; }
+  .gt-caret { width: 30px; height: 30px; }
+  .gt-input { font-size: 16px; }
+  .gt-grip { width: 22px; }
+  .gt-grip[data-part="start"] { left: -8px; }
+  .gt-grip[data-part="end"] { right: -8px; }
+  .gt-dot { width: 14px; height: 14px; }
+  .gt-dot::before { inset: -10px; }
+  .gt-dot[data-part="link-start"] { left: -28px; }
+  .gt-dot[data-part="link-end"] { left: calc(100% + 28px); }
+  .gt-label { left: calc(100% + 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-caret svg,
+  .gt-dot,
+  .gt-btn { transition: none; }
+}

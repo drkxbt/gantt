@@ -1,0 +1,18 @@
+gantt
+Copyright 2026 drk
+
+Licensed under the MIT License. See LICENSE.
+
+The demo page ships the Geist and Geist Mono typefaces by Vercel, in collaboration
+with basement.studio, in demo/fonts/. They are licensed under the SIL Open Font
+License 1.1. See demo/fonts/OFL.txt.
+
+The plan in the demo, its tasks and its dates, is a made-up sample.
+
+The recording tour (demo/tour.html) draws an iPhone and a MacBook running Safari to show
+the demo at their sizes. iPhone, MacBook and Safari are trademarks of Apple Inc.; the
+drawings are approximations made for this demo and imply no connection with Apple.
+Bryntum Gantt and DHTMLX Gantt are named only to say what kind of tool this is; they are
+products of Bryntum AB and XB Software, which have no connection with this project.
+
+The library itself bundles no fonts, icons or images.
