@@ -2,6 +2,8 @@
 
 A Gantt chart for the browser, in plain TypeScript with no dependencies. Tasks sit in a tree beside a timeline. Drag a bar to move it, pull an end to make it longer, slide its progress along, or draw a link from one task to another, and every task waiting on it moves later with it. Turn on the critical path to see which tasks decide the end date. Every change can be undone, and the plan comes back as plain data to save.
 
+Try the [Gantt chart demo on drk.vc](https://drk.vc/repo?id=gantt#preview).
+
 ![A MacBook and an iPhone running the chart in Safari: on the MacBook, a task is dragged two days later and eight tasks after it follow, another is stretched, a link is drawn that pushes the phone pass along, progress is pulled forward, then the critical path turns red and the view zooms out to weeks; on the iPhone, the task list folds away, a task is moved and another stretched by finger, then the critical path and the wider view](demo/preview.webp)
 
 Charts that do this well, such as Bryntum Gantt and DHTMLX Gantt, are sold per developer. This one is MIT licensed: use it in a product, change it, ship it.
